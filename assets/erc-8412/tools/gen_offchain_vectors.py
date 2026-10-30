@@ -153,6 +153,17 @@ V.append(build("valid-custom-rule", "OK",
                "Namespaced decisionRule: valid, O4 reported as unchecked.",
                mut_criteria=lambda c: c.update(decisionRule="io.example.weighted-v1")))
 
+V.append(build("valid-proto-member", "OK",
+               "Criteria carry an ordinary member named \"__proto__\". Valid: the criteria digest covers it like any other key "
+               "(JCS keeps it). Adversarial for JavaScript ports: copying a document with Object.assign or plain assignment hits "
+               "the __proto__ setter and silently drops the member, so the port computes a different digest and misreads a "
+               "valid package as an O5 criteria-digest mismatch -- and two different criteria documents can collide. Parse with "
+               "JSON.parse and copy with spread / null-prototype objects. Reported live by an independent implementation "
+               "(ERC-8183 judge, ethereum/ERCs#2002).",
+               mut_criteria=lambda c: c.update({"__proto__": {"x-note": "hashed as an ordinary member"}})))
+_pm, _base = V[-1]["criteria"], base_criteria()
+assert "__proto__" in _pm and doc_digest(_pm) != doc_digest(_base), "__proto__ member must change the criteria digest"
+
 # ------------------------------------------------------------------ O1
 V.append(build("o1-evidence-predates-criteria", "O1",
                "Photo captured one hour before the criteria were registered (replayed evidence).",
